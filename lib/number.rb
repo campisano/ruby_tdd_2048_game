@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Number
   def initialize(value)
     raise('value cannot be less than 2') if value < 2
