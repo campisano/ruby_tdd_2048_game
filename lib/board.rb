@@ -82,7 +82,26 @@ class Board
   end
 
   def place_number_randomly(number)
-    ''
+    free_pos = size - count
+
+    if free_pos == 0
+      raise('no space left on board')
+    end
+
+    rand_pos = generate_random_place(free_pos - 1)
+
+    for row in (0 ... EDGE_SIZE)
+      for col in (0  ... EDGE_SIZE)
+        if ! @positions[row][col].has_number
+          if rand_pos == 0
+            @positions[row][col].place(number)
+            return
+          else
+            rand_pos -= 1
+          end
+        end
+      end
+    end
   end
 
   def size
@@ -101,8 +120,8 @@ class Board
     count = 0
     for row in (0 ... EDGE_SIZE)
       for col in (0 ... EDGE_SIZE)
-        if @positions[row][col].has_number()
-          ++count
+        if @positions[row][col].has_number
+          count += 1
         end
       end
     end
@@ -113,18 +132,21 @@ class Board
 
   def slide_from(position, has_direction, at_direction)
     dest = position
-    while((dest.send has_direction) &&
+    while (dest.send has_direction) &&
           (
             !(dest.send at_direction).has_number ||
-            (dest.send at_direction).number.can_merge(
-              dest.number)
-          ))
+            (dest.send at_direction).number.can_merge(position.number)
+          )
       dest = (dest.send at_direction)
     end
 
     if dest != position
       position.transfer_to(dest)
     end
+  end
+
+  def generate_random_place(limit)
+    rand(0..limit)
   end
 
   EDGE_SIZE = 4

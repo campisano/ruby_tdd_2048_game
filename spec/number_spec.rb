@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'number'
 
 ARBITRARY_VALUE = 8

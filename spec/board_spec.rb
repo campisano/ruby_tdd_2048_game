@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'board'
 
 EXPECTED_BOARD_SIZE = 16
@@ -157,193 +159,172 @@ describe Board do
         expect(b.at(3, 0).has_number).to eql(true)
       end
     end
+
+    describe 'slide' do
+      it 'not over board edge' do
+        b = Board.new
+        n = Number.new(ARBITRARY_VALUE)
+        b.at(2, 0).place(n)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+      end
+
+      it 'stop on not mergeable number' do
+        b          = Board.new
+        moving_n   = Number.new(ARBITRARY_VALUE)
+        blocking_n = Number.new(4 * ARBITRARY_VALUE)
+        b.at(2, 3).place(moving_n)
+        b.at(2, 0).place(blocking_n)
+
+        b.slide_left
+
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 1).number.value).to eql(ARBITRARY_VALUE)
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 0).number.value).to eql(4 * ARBITRARY_VALUE)
+      end
+
+      it 'stop on not mergeable number after its move' do
+        b                 = Board.new
+        moving_n          = Number.new(ARBITRARY_VALUE)
+        moving_blocking_n = Number.new(4 * ARBITRARY_VALUE)
+        b.at(2, 3).place(moving_n)
+        b.at(2, 1).place(moving_blocking_n)
+
+        b.slide_left
+
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 1).number.value).to eql(ARBITRARY_VALUE)
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 0).number.value).to eql(4 * ARBITRARY_VALUE)
+      end
+
+      it 'move and merge at edge two mergeable numbers' do
+        b         = Board.new
+        moving_n  = Number.new(ARBITRARY_VALUE)
+        blocked_n = Number.new(ARBITRARY_VALUE)
+        b.at(2, 3).place(moving_n)
+        b.at(2, 1).place(blocked_n)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 1).has_number).to eql(false)
+        expect(b.at(2, 2).has_number).to eql(false)
+        expect(b.at(2, 3).has_number).to eql(false)
+        expect(b.at(2, 0).number.value).to eql(2 * ARBITRARY_VALUE)
+      end
+
+      it 'not merge third mergeable number' do
+        b                 = Board.new
+        moving_n          = Number.new(2 * ARBITRARY_VALUE)
+        moving_merging_n  = Number.new(ARBITRARY_VALUE)
+        blocked_n         = Number.new(ARBITRARY_VALUE)
+        b.at(2, 2).place(moving_n)
+        b.at(2, 1).place(moving_merging_n)
+        b.at(2, 0).place(blocked_n)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 2).has_number).to eql(false)
+        expect(b.at(2, 3).has_number).to eql(false)
+        expect(b.at(2, 0).number.value).to eql(2 * ARBITRARY_VALUE)
+        expect(b.at(2, 1).number.value).to eql(2 * ARBITRARY_VALUE)
+        expect(b.at(2, 1).number).to eql(moving_n)
+      end
+
+      it 'merge two by two of four equal numbers' do
+        b   = Board.new
+        n_0 = Number.new(ARBITRARY_VALUE)
+        n_1 = Number.new(ARBITRARY_VALUE)
+        n_2 = Number.new(ARBITRARY_VALUE)
+        n_3 = Number.new(ARBITRARY_VALUE)
+        b.at(2, 0).place(n_0)
+        b.at(2, 1).place(n_1)
+        b.at(2, 2).place(n_2)
+        b.at(2, 3).place(n_3)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 2).has_number).to eql(false)
+        expect(b.at(2, 3).has_number).to eql(false)
+        expect(b.at(2, 0).number.value).to eql(2 * ARBITRARY_VALUE)
+        expect(b.at(2, 1).number.value).to eql(2 * ARBITRARY_VALUE)
+      end
+
+      it 'merge couples of mergeable numbers' do
+        b   = Board.new
+        n_0 = Number.new(ARBITRARY_VALUE)
+        n_1 = Number.new(ARBITRARY_VALUE)
+        n_2 = Number.new(2 * ARBITRARY_VALUE)
+        n_3 = Number.new(2 * ARBITRARY_VALUE)
+        b.at(2, 0).place(n_0)
+        b.at(2, 1).place(n_1)
+        b.at(2, 2).place(n_2)
+        b.at(2, 3).place(n_3)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 2).has_number).to eql(false)
+        expect(b.at(2, 3).has_number).to eql(false)
+        expect(b.at(2, 0).number.value).to eql(2 * ARBITRARY_VALUE)
+        expect(b.at(2, 1).number.value).to eql(4 * ARBITRARY_VALUE)
+      end
+
+      it 'merge middle numbers' do
+        b   = Board.new
+        n_0 = Number.new(ARBITRARY_VALUE)
+        n_1 = Number.new(2 * ARBITRARY_VALUE)
+        n_2 = Number.new(2 * ARBITRARY_VALUE)
+        n_3 = Number.new(4 * ARBITRARY_VALUE)
+        b.at(2, 0).place(n_0)
+        b.at(2, 1).place(n_1)
+        b.at(2, 2).place(n_2)
+        b.at(2, 3).place(n_3)
+
+        b.slide_left
+
+        expect(b.at(2, 0).has_number).to eql(true)
+        expect(b.at(2, 1).has_number).to eql(true)
+        expect(b.at(2, 2).has_number).to eql(true)
+        expect(b.at(2, 3).has_number).to eql(false)
+        expect(b.at(2, 0).number.value).to eql(ARBITRARY_VALUE)
+        expect(b.at(2, 1).number.value).to eql(4 * ARBITRARY_VALUE)
+        expect(b.at(2, 2).number.value).to eql(4 * ARBITRARY_VALUE)
+      end
+    end
+
+    describe 'place randomly' do
+      it 'in empty board' do
+        b = Board.new
+        n = Number.new(ARBITRARY_VALUE)
+
+        b.place_number_randomly(n)
+
+        expect(b.count).to eql(1)
+      end
+
+      it 'when out of space' do
+        b = Board.new
+        for i in 0...b.size
+          n = Number.new(ARBITRARY_VALUE)
+          b.place_number_randomly(n)
+        end
+
+        n = Number.new(ARBITRARY_VALUE)
+
+        expect { b.place_number_randomly(n) }.to raise_error(
+          RuntimeError, /no space left on board/
+        )
+      end
+    end
   end
-
-# TEST(BoardTest, SlideNotOverEdge)
-# {
-#     BoardTestable board;
-#     auto          number = Number::make(ARBITRARY_VALUE);
-#     board.at(2, 0).place(number);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-# }
-
-# TEST(BoardTest, SlideStopOnNotMergeableNumber)
-# {
-#     BoardTestable board;
-#     auto          moving_number   = Number::make(ARBITRARY_VALUE);
-#     auto          blocking_number = Number::make(4 * ARBITRARY_VALUE);
-#     board.at(2, 3).place(moving_number);
-#     board.at(2, 0).place(blocking_number);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_EQUAL(ARBITRARY_VALUE, board.at(2, 1).number()->value());
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_EQUAL(4 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-# }
-
-# TEST(BoardTest, SlideStopOnNotMergeableNumberAfterItsMove)
-# {
-#     BoardTestable board;
-#     auto          moving_number          = Number::make(ARBITRARY_VALUE);
-#     auto          moving_blocking_number = Number::make(4 * ARBITRARY_VALUE);
-#     board.at(2, 3).place(moving_number);
-#     board.at(2, 1).place(moving_blocking_number);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_EQUAL(ARBITRARY_VALUE, board.at(2, 1).number()->value());
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_EQUAL(4 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-# }
-
-# TEST(BoardTest, SlideMoveAndMergeAtEdgeTwoMergeableNumbers)
-# {
-#     BoardTestable board;
-#     auto          moving_number  = Number::make(ARBITRARY_VALUE);
-#     auto          blocked_number = Number::make(ARBITRARY_VALUE);
-#     board.at(2, 3).place(moving_number);
-#     board.at(2, 1).place(blocked_number);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_FALSE(board.at(2, 1).hasNumber());
-#     CHECK_FALSE(board.at(2, 2).hasNumber());
-#     CHECK_FALSE(board.at(2, 3).hasNumber());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-# }
-
-# TEST(BoardTest, SlideNotMergeThirdMergeableNumber)
-# {
-#     BoardTestable board;
-#     auto          moving_number         = Number::make(2 * ARBITRARY_VALUE);
-#     Number    *   moving_num_ptr        = moving_number.get();
-#     auto          moving_merging_number = Number::make(ARBITRARY_VALUE);
-#     auto          blocked_number        = Number::make(ARBITRARY_VALUE);
-#     board.at(2, 2).place(moving_number);
-#     board.at(2, 1).place(moving_merging_number);
-#     board.at(2, 0).place(blocked_number);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_FALSE(board.at(2, 2).hasNumber());
-#     CHECK_FALSE(board.at(2, 3).hasNumber());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 1).number()->value());
-#     CHECK_EQUAL(moving_num_ptr, board.at(2, 1).number().get());
-# }
-
-# TEST(BoardTest, SlideMergeTwoByTwoOfFourEqualNumbers)
-# {
-#     BoardTestable board;
-#     auto          num_0 = Number::make(ARBITRARY_VALUE);
-#     auto          num_1 = Number::make(ARBITRARY_VALUE);
-#     auto          num_2 = Number::make(ARBITRARY_VALUE);
-#     auto          num_3 = Number::make(ARBITRARY_VALUE);
-#     board.at(2, 0).place(num_0);
-#     board.at(2, 1).place(num_1);
-#     board.at(2, 2).place(num_2);
-#     board.at(2, 3).place(num_3);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_FALSE(board.at(2, 2).hasNumber());
-#     CHECK_FALSE(board.at(2, 3).hasNumber());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 1).number()->value());
-# }
-
-# TEST(BoardTest, SlideMergeCouplesOfMergeableNumbers)
-# {
-#     BoardTestable board;
-#     auto          num_0 = Number::make(ARBITRARY_VALUE);
-#     auto          num_1 = Number::make(ARBITRARY_VALUE);
-#     auto          num_2 = Number::make(2 * ARBITRARY_VALUE);
-#     auto          num_3 = Number::make(2 * ARBITRARY_VALUE);
-#     board.at(2, 0).place(num_0);
-#     board.at(2, 1).place(num_1);
-#     board.at(2, 2).place(num_2);
-#     board.at(2, 3).place(num_3);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_FALSE(board.at(2, 2).hasNumber());
-#     CHECK_FALSE(board.at(2, 3).hasNumber());
-#     CHECK_EQUAL(2 * ARBITRARY_VALUE, board.at(2, 0).number()->value());
-#     CHECK_EQUAL(4 * ARBITRARY_VALUE, board.at(2, 1).number()->value());
-# }
-
-# TEST(BoardTest, SlideMergeMiddleNumbers)
-# {
-#     BoardTestable board;
-#     auto          num_0 = Number::make(ARBITRARY_VALUE);
-#     auto          num_1 = Number::make(2 * ARBITRARY_VALUE);
-#     auto          num_2 = Number::make(2 * ARBITRARY_VALUE);
-#     auto          num_3 = Number::make(4 * ARBITRARY_VALUE);
-#     board.at(2, 0).place(num_0);
-#     board.at(2, 1).place(num_1);
-#     board.at(2, 2).place(num_2);
-#     board.at(2, 3).place(num_3);
-
-#     board.slideLeft();
-
-#     CHECK_TRUE(board.at(2, 0).hasNumber());
-#     CHECK_TRUE(board.at(2, 1).hasNumber());
-#     CHECK_TRUE(board.at(2, 2).hasNumber());
-#     CHECK_FALSE(board.at(2, 3).hasNumber());
-#     CHECK_EQUAL(ARBITRARY_VALUE, board.at(2, 0).number()->value());
-#     CHECK_EQUAL(4 * ARBITRARY_VALUE, board.at(2, 1).number()->value());
-#     CHECK_EQUAL(4 * ARBITRARY_VALUE, board.at(2, 2).number()->value());
-# }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TEST(BoardTest, PlaceNumberRandomly)
-# {
-#     BoardTestable board;
-#     auto          number = Number::make(ARBITRARY_VALUE);
-
-#     board.placeNumberRandomly(number);
-
-#     CHECK_EQUAL(1, board.count());
-# }
-
-# TEST(BoardTest, PlaceNumberRandomlyOutOfSpace)
-# {
-#     BoardTestable board;
-#     for(int i = 0; i < board.size(); ++i)
-#     {
-#         auto n = Number::make(ARBITRARY_VALUE);
-#         board.placeNumberRandomly(n);
-#     }
-#     auto number = Number::make(ARBITRARY_VALUE);
-
-#     CHECK_THROWS_STDEXCEPT(
-#         std::runtime_error, "no space left on board",
-#         board.placeNumberRandomly(number));
-# }
 end

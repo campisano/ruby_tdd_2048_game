@@ -20,14 +20,14 @@ class Number
     @merged = true
   end
 
+  def can_merge(number)
+    !@merged && !number.instance_variable_get('@merged') &&
+      number.instance_variable_get('@value') == @value
+  end
+
   private
 
   def is_power_of_two(value)
     (value > 0) && ((value & (value - 1)) == 0)
-  end
-
-  def can_merge(number)
-    !@merged && !number.instance_variable_get('@merged') &&
-      number.instance_variable_get('@value') == @value
   end
 end
